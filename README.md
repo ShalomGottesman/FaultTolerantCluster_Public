@@ -9,7 +9,7 @@ The cluster provides a service to compile and run Java files. A user can submit 
 # Project Requirments
 + Nodes have to use [Gossip](https://en.wikipedia.org/wiki/Gossip_protocol) style [heartbeat](https://en.wikipedia.org/wiki/Heartbeat_(computing)) to inform each other of liveness. Should a node be discovered to have failed, nodes should inform other nodes that that has taken place. All information related to heartbeat should be logged. 
 
-+ With the exception of a Gateway node, nodes must use the (Zookeeper leader election)[https://en.wikipedia.org/wiki/Leader_election] algorithm to elect a leader of the cluster who is in charge of distributing work to the worker nodes. Each node should have a unique ID, and vote preference is by the natural ordering of the IDs (Highest ID wins)
++ With the exception of a Gateway node, nodes must use the [Zookeeper leader election](https://en.wikipedia.org/wiki/Leader_election) algorithm to elect a leader of the cluster who is in charge of distributing work to the worker nodes. Each node should have a unique ID, and vote preference is by the natural ordering of the IDs (Highest ID wins)
 
 + If a worker node fails, the request it was working on must not be lost.
 
