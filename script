@@ -1,0 +1,377 @@
+#!/bin/bash
+((
+###STEP 1###
+#Run Mavne compile
+echo run maven compile
+mvn compile
+
+#Run Maven tests
+#echo run maven tests
+#mvn -Dstyle.color=never test
+
+#Move to folder with compiled classes
+echo moving to compiled directory
+cd target/classes
+###END STEP 1###
+
+
+###STEP 2###
+#Start servers and save PIDs
+echo start server 1
+java edu.yu.cs.com3800.stage5.ZooKeeperPeerServerImpl 0 1 [1:localhost:8610,2:localhost:8620,3:localhost:8630,4:localhost:8640,5:localhost:8650,6:localhost:8660,7:localhost:8670,8:localhost:8680] [localhost:8680] &
+PID1=$!
+echo "server 1 PID -> $PID1"
+
+echo start server 2
+java edu.yu.cs.com3800.stage5.ZooKeeperPeerServerImpl 0 2 [1:localhost:8610,2:localhost:8620,3:localhost:8630,4:localhost:8640,5:localhost:8650,6:localhost:8660,7:localhost:8670,8:localhost:8680] [localhost:8680] &
+PID2=$!
+echo "server 2 PID -> $PID2"
+
+echo start server 3
+java edu.yu.cs.com3800.stage5.ZooKeeperPeerServerImpl 0 3 [1:localhost:8610,2:localhost:8620,3:localhost:8630,4:localhost:8640,5:localhost:8650,6:localhost:8660,7:localhost:8670,8:localhost:8680] [localhost:8680] &
+PID3=$!
+echo "server 3 PID -> $PID3"
+
+echo start server 4
+java edu.yu.cs.com3800.stage5.ZooKeeperPeerServerImpl 0 4 [1:localhost:8610,2:localhost:8620,3:localhost:8630,4:localhost:8640,5:localhost:8650,6:localhost:8660,7:localhost:8670,8:localhost:8680] [localhost:8680] &
+PID4=$!
+echo "server 4 PID -> $PID4"
+
+echo start server 5
+java edu.yu.cs.com3800.stage5.ZooKeeperPeerServerImpl 0 5 [1:localhost:8610,2:localhost:8620,3:localhost:8630,4:localhost:8640,5:localhost:8650,6:localhost:8660,7:localhost:8670,8:localhost:8680] [localhost:8680] &
+PID5=$!
+echo "server 5 PID -> $PID5"
+
+echo start server 6
+java edu.yu.cs.com3800.stage5.ZooKeeperPeerServerImpl 0 6 [1:localhost:8610,2:localhost:8620,3:localhost:8630,4:localhost:8640,5:localhost:8650,6:localhost:8660,7:localhost:8670,8:localhost:8680] [localhost:8680] &
+PID6=$!
+echo "server 6 PID -> $PID6"
+
+echo start server 7
+java edu.yu.cs.com3800.stage5.ZooKeeperPeerServerImpl 0 7 [1:localhost:8610,2:localhost:8620,3:localhost:8630,4:localhost:8640,5:localhost:8650,6:localhost:8660,7:localhost:8670,8:localhost:8680] [localhost:8680] &
+PID7=$!
+echo "server 7 PID -> $PID7"
+
+echo start server 8
+java edu.yu.cs.com3800.stage5.GatewayServer 0 8 [1:localhost:8610,2:localhost:8620,3:localhost:8630,4:localhost:8640,5:localhost:8650,6:localhost:8660,7:localhost:8670,8:localhost:8680] [localhost:8680] &
+PID8=$!
+echo "server 8 PID -> $PID8"
+###END STEP 2###
+
+echo printing ps aux
+ps aux
+
+###STEP 3###
+#sleep for 5 seconds to allow election to take place
+echo sleep 5 sec for election to occur
+sleep 5
+
+#test if gateway has leader. Capture response code as indication of found leader:
+#204 -> no leader
+#200 -> has leader
+echo testing gateway if leader is present
+gatewayLeaderRespCode=$(curl -s -o /dev/null -w "%{http_code}" localhost:8681/leader)
+while [ $gatewayLeaderRespCode != "200" ]
+do
+echo server did not yet have a leader, wait 5 seconds and try again
+sleep 5
+gatewayLeaderRespCode=$(curl -s -o /dev/null -w "%{http_code}" localhost:8681/leader)
+done
+echo gateway recognizes a leader is present. Continue script
+
+
+#capture/set temp dir for background process output
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+TMPDIR=$SCRIPT_DIR
+
+#capture gossip log file locations for later printing
+echo capturing gossip log file locations for later printing
+echo capture gossip file for server 1
+(curl -s localhost:8611/gossiplog) > "$TMPDIR/tmpfile.g1" &
+GBP1=$!
+echo "Background process 1 PID -> $GBP1"
+
+echo capture gossip file for server 2
+(curl -s localhost:8621/gossiplog) > "$TMPDIR/tmpfile.g2" &
+GBP2=$!
+echo "Background process 2 PID -> $GBP2"
+
+echo capture gossip file for server 3
+(curl -s localhost:8631/gossiplog) > "$TMPDIR/tmpfile.g3" &
+GBP3=$!
+echo "Background process 3 PID -> $GBP3"
+
+echo capture gossip file for server 4
+(curl -s localhost:8641/gossiplog) > "$TMPDIR/tmpfile.g4" &
+GBP4=$!
+echo "Background process 4 PID -> $GBP4"
+
+echo capture gossip file for server 5
+(curl -s localhost:8651/gossiplog) > "$TMPDIR/tmpfile.g5" &
+GBP5=$!
+echo "Background process 5 PID -> $GBP5"
+
+echo capture gossip file for server 6
+(curl -s localhost:8661/gossiplog) > "$TMPDIR/tmpfile.g6" &
+GBP6=$!
+echo "Background process 6 PID -> $GBP6"
+
+echo capture gossip file for server 7
+(curl -s localhost:8671/gossiplog) > "$TMPDIR/tmpfile.g7" &
+GBP7=$!
+echo "Background process 7 PID -> $GBP7"
+
+echo capture gossip file for server 8
+(curl -s localhost:8681/gossiplog) > "$TMPDIR/tmpfile.g8" &
+GBP8=$!
+echo "Background process 8 PID -> $GBP8"
+#Wont demand these be complete until we decide to kill a server. 
+#Although they will most likely be complete before we get the cluster status back
+	
+#request cluster status from gateway and print to stdout
+echo get cluster status. Depending on how slow the computer is, this may take a while
+curl -s localhost:8683/clusterstatus
+###END STEP 3###
+
+###STEP 4###
+#Define header and request data packets
+header='"Content-Type: text/x-java-source"'
+req1="'public class HelloWorld { public String run() { return "'"1"'"; } }'"
+req2="'public class HelloWorld { public String run() { return "'"2"'"; } }'"
+req3="'public class HelloWorld { public String run() { return "'"3"'"; } }'"
+req4="'public class HelloWorld { public String run() { return "'"4"'"; } }'"
+req5="'public class HelloWorld { public String run() { return "'"5"'"; } }'"
+req6="'public class HelloWorld { public String run() { return "'"6"'"; } }'"
+req7="'public class HelloWorld { public String run() { return "'"7"'"; } }'"
+req8="'public class HelloWorld { public String run() { return "'"8"'"; } }'"
+req9="'public class HelloWorld { public String run() { return "'"9"'"; } }'"
+
+#Send and capture the curl requests
+echo sending client requests
+echo sending client request 1
+resp1=$(curl -X POST -H "Content-Type: text/x-java-source" -d 'public class HelloWorld { public String run() { return "1"; } }' -s localhost:8683/compileandrun)
+echo sending client request 2
+resp2=$(curl -X POST -H "Content-Type: text/x-java-source" -d 'public class HelloWorld { public String run() { return "2"; } }' -s localhost:8683/compileandrun)
+echo sending client request 3
+resp3=$(curl -X POST -H "Content-Type: text/x-java-source" -d 'public class HelloWorld { public String run() { return "3"; } }' -s localhost:8683/compileandrun)
+echo sending client request 4
+resp4=$(curl -X POST -H "Content-Type: text/x-java-source" -d 'public class HelloWorld { public String run() { return "4"; } }' -s localhost:8683/compileandrun)
+echo sending client request 5
+resp5=$(curl -X POST -H "Content-Type: text/x-java-source" -d 'public class HelloWorld { public String run() { return "5"; } }' -s localhost:8683/compileandrun)
+echo sending client request 6
+resp6=$(curl -X POST -H "Content-Type: text/x-java-source" -d 'public class HelloWorld { public String run() { return "6"; } }' -s localhost:8683/compileandrun)
+echo sending client request 7
+resp7=$(curl -X POST -H "Content-Type: text/x-java-source" -d 'public class HelloWorld { public String run() { return "7"; } }' -s localhost:8683/compileandrun)
+echo sending client request 8
+resp8=$(curl -X POST -H "Content-Type: text/x-java-source" -d 'public class HelloWorld { public String run() { return "8"; } }' -s localhost:8683/compileandrun)
+echo sending client request 9
+resp9=$(curl -X POST -H "Content-Type: text/x-java-source" -d 'public class HelloWorld { public String run() { return "9"; } }' -s localhost:8683/compileandrun)
+
+#print request and the resposes
+echo "request 1 -> $req1"
+echo "response 1 -> $resp1"
+echo "request 2 -> $req2"
+echo "response 2 -> $resp2"
+echo "request 3 -> $req3"
+echo "response 3 -> $resp3"
+echo "request 4 -> $req4"
+echo "response 4 -> $resp4"
+echo "request 5 -> $req5"
+echo "response 5 -> $resp5"
+echo "request 6 -> $req6"
+echo "response 6 -> $resp6"
+echo "request 7 -> $req7"
+echo "response 7 -> $resp7"
+echo "request 8 -> $req8"
+echo "response 8 -> $resp8"
+echo "request 9 -> $req9"
+echo "response 9 -> $resp9"
+###END STEP 4###
+
+#Check that all Gossip file location requests have returned the absolute path
+#Requesting that data from a server is no longer possible once the server is dead
+wait $GBP1
+wait $GBP2 
+wait $GBP3 
+wait $GBP4 
+wait $GBP5 
+wait $GBP6 
+wait $GBP7 
+wait $GBP8 
+
+#Reach all Gossip data from the tmp files
+gossip1=$(cat "$TMPDIR/tmpfile.g1")
+gossip2=$(cat "$TMPDIR/tmpfile.g2")
+gossip3=$(cat "$TMPDIR/tmpfile.g3")
+gossip4=$(cat "$TMPDIR/tmpfile.g4")
+gossip5=$(cat "$TMPDIR/tmpfile.g5")
+gossip6=$(cat "$TMPDIR/tmpfile.g6")
+gossip7=$(cat "$TMPDIR/tmpfile.g7")
+gossip8=$(cat "$TMPDIR/tmpfile.g8")
+
+###STEP 5###
+#kill FOLLOWER on server 1
+echo killing server 1 on udp port 8610
+kill -9 $PID1
+
+#wait time for discovery of dead node
+echo wait 30 seconds for fail to be discovered.
+sleep 30
+
+#Request cluster status from gateway
+echo get cluster status again
+curl -s localhost:8683/clusterstatus
+###END STEP 5###
+
+###STEP 6###
+#capture leaderID from gateway
+echo capture leader ID from gateway
+leaderID=$(curl -s localhost:8681/leader)
+echo "leaderID is $leaderID"
+
+if [ $leaderID == 2 ] ; then
+	echo killing PID 2
+	kill -9 $PID2
+elif [ $leaderID == 3 ] ; then
+	echo killing PID 3
+	kill -9 $PID3
+elif [ $leaderID == 4 ] ; then
+	echo killing PID 4
+	kill -9 $PID4
+elif [ $leaderID == 5 ] ; then
+	echo killing PID 5
+	kill -9 $PID5
+elif [ $leaderID == 6 ] ; then
+	echo killing PID 6
+	kill -9 $PID6
+elif [ $leaderID == 7 ] ; then
+	echo killing PID 7
+	kill -9 $PID7
+else
+	echo Leader was $leaderID and not recognized!
+fi
+
+#sleep for 1 second before sending requests
+sleep 1
+
+#send 9 requests in the background. 
+#Send and capture the curl requests
+echo sending client requests in background
+
+echo sending client request 1
+(curl -X POST -H "Content-Type: text/x-java-source" -d 'public class HelloWorld { public String run() { return "10"; } }' -s localhost:8683/compileandrun) > "$TMPDIR/tmpfile.1" &
+BP1=$!
+echo "Background process 1 PID -> $BP1"
+echo sending client request 2
+(curl -X POST -H "Content-Type: text/x-java-source" -d 'public class HelloWorld { public String run() { return "11"; } }' -s localhost:8683/compileandrun) > "$TMPDIR/tmpfile.2" &
+BP2=$!
+echo "Background process 2 PID -> $BP2"
+echo sending client request 3
+(curl -X POST -H "Content-Type: text/x-java-source" -d 'public class HelloWorld { public String run() { return "12"; } }' -s localhost:8683/compileandrun) > "$TMPDIR/tmpfile.3" &
+BP3=$!
+echo "Background process 3 PID -> $BP3"
+echo sending client request 4
+(curl -X POST -H "Content-Type: text/x-java-source" -d 'public class HelloWorld { public String run() { return "13"; } }' -s localhost:8683/compileandrun) > "$TMPDIR/tmpfile.4" &
+BP4=$!
+echo "Background process 4 PID -> $BP4"
+echo sending client request 5
+(curl -X POST -H "Content-Type: text/x-java-source" -d 'public class HelloWorld { public String run() { return "14"; } }' -s localhost:8683/compileandrun) > "$TMPDIR/tmpfile.5" &
+BP5=$!
+echo "Background process 5 PID -> $BP5"
+echo sending client request 6
+(curl -X POST -H "Content-Type: text/x-java-source" -d 'public class HelloWorld { public String run() { return "15"; } }' -s localhost:8683/compileandrun) > "$TMPDIR/tmpfile.6" &
+BP6=$!
+echo "Background process 6 PID -> $BP6"
+echo sending client request 7
+(curl -X POST -H "Content-Type: text/x-java-source" -d 'public class HelloWorld { public String run() { return "16"; } }' -s localhost:8683/compileandrun) > "$TMPDIR/tmpfile.7" &
+BP7=$!
+echo "Background process 7 PID -> $BP7"
+echo sending client request 8
+(curl -X POST -H "Content-Type: text/x-java-source" -d 'public class HelloWorld { public String run() { return "17"; } }' -s localhost:8683/compileandrun) > "$TMPDIR/tmpfile.8" &
+BP8=$!
+echo "Background process 8 PID -> $BP8"
+echo sending client request 9
+(curl -X POST -H "Content-Type: text/x-java-source" -d 'public class HelloWorld { public String run() { return "18"; } }' -s localhost:8683/compileandrun) > "$TMPDIR/tmpfile.9" &
+BP9=$!
+echo "Background process 9 PID -> $BP9"
+###END STEP 6###
+
+###STEP 7###
+#Processies cannot complete until new leader is elected. Wait on curl requests
+echo "waiting on PIDS: $BP1 $BP2 $BP3 $BP4 $BP5 $BP6 $BP7 $BP8 $BP9"
+wait $BP1
+wait $BP2 
+wait $BP3 
+wait $BP4 
+wait $BP5 
+wait $BP6 
+wait $BP7 
+wait $BP8 
+wait $BP9
+echo wait complete
+#read data from response dump files into variables
+r1=$(cat "$TMPDIR/tmpfile.1")
+r2=$(cat "$TMPDIR/tmpfile.2")
+r3=$(cat "$TMPDIR/tmpfile.3")
+r4=$(cat "$TMPDIR/tmpfile.4")
+r5=$(cat "$TMPDIR/tmpfile.5")
+r6=$(cat "$TMPDIR/tmpfile.6")
+r7=$(cat "$TMPDIR/tmpfile.7")
+r8=$(cat "$TMPDIR/tmpfile.8")
+r9=$(cat "$TMPDIR/tmpfile.9")
+
+#print request and the resposes
+echo "request 1 -> 'public class HelloWorld { public String run() { return "10"; } }'"
+echo "response 1 -> $r1"
+echo "request 2 -> 'public class HelloWorld { public String run() { return "11"; } }'"
+echo "response 3 -> $r2"
+echo "request 3 -> 'public class HelloWorld { public String run() { return "12"; } }'"
+echo "response 3 -> $r3"
+echo "request 4 -> 'public class HelloWorld { public String run() { return "13"; } }'"
+echo "response 4 -> $r4"
+echo "request 5 -> 'public class HelloWorld { public String run() { return "14"; } }'"
+echo "response 5 -> $r5"
+echo "request 6 -> 'public class HelloWorld { public String run() { return "15"; } }'"
+echo "response 6 -> $r6"
+echo "request 7 -> 'public class HelloWorld { public String run() { return "16"; } }'"
+echo "response 7 -> $r7"
+echo "request 8 -> 'public class HelloWorld { public String run() { return "17"; } }'"
+echo "response 8 -> $r8"
+echo "request 9 -> 'public class HelloWorld { public String run() { return "18"; } }'"
+echo "response 9 -> $r9"
+###END STEP 7###
+
+###STEP 8###
+echo print one more request in the forground:
+echo "curl -X POST -H "Content-Type: text/x-java-source" -d 'public class HelloWorld { public String run() { return "19"; } }' -s localhost:8683/compileandrun"
+curl -X POST -H "Content-Type: text/x-java-source" -d 'public class HelloWorld { public String run() { return "19"; } }' -s localhost:8683/compileandrun
+printf "\n"
+###END STEP 8###
+
+###STEP 9###
+#print gossip log files
+echo gossip log for server 1: $gossip1
+echo gossip log for server 2: $gossip2
+echo gossip log for server 3: $gossip3
+echo gossip log for server 4: $gossip4
+echo gossip log for server 5: $gossip5
+echo gossip log for server 6: $gossip6
+echo gossip log for server 7: $gossip7
+echo gossip log for server 8: $gossip8
+echo Note that becuase of how the LoggingServer is set up, usually log files for a single run will always end up in the same folder. Except becuase this script is using completely seperate processies, they may end up in different folders
+###END STEP 9###
+
+###STEP 10###
+#shut down servers
+echo shutting down the rest of the servers
+kill -9 $PID1
+kill -9 $PID2
+kill -9 $PID3
+kill -9 $PID4
+kill -9 $PID5
+kill -9 $PID6
+kill -9 $PID7
+kill -9 $PID8
+###END STEP 10###
+#Redirect stderr to stdout and then duplicate stdout to output.log
+) 2>&1) | tee output.log
