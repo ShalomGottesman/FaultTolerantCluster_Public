@@ -1,7 +1,7 @@
 # Fault Tolerance Cluster Project
 This is a showcase of my Introduction to Distributed Systems course project. Over the course of the semester I built a failt-fast, fault-tolerant cluster to balance an arbitrary workload. Work is submitted, and results were received from, an HTTP accesible API.
 
-Full technical requirments can be found in [this] (https://github.com/ShalomGottesman/FaultTolerantCluster_Public/blob/main/COM-3800-Fall-2021-Semester-Project.pdf) PDF
+Full technical requirments can be found in [this](https://github.com/ShalomGottesman/FaultTolerantCluster_Public/blob/main/COM-3800-Fall-2021-Semester-Project.pdf) PDF
 
 # Project Overview
 The cluster provides an service to compile and run Java files. A user can use a provided client to submit java files to a REST API, where the gateway receiving the work forwards the file to another node in the cluster for compiling and running. Results are forwarded back to the gateway, and then back to the client. Within the cluster, nodes have to arrange themselves to distribute work evenly, and respond accordingly if one should fail.
@@ -24,7 +24,7 @@ The cluster provides an service to compile and run Java files. A user can use a 
 + The provided script (see below) runs the application with multiple nodes running concurrently on the same machine. Each node starts up mulitple threads and does a lot of inter and intra node talking. An underpowered machine will have a very hard time running this script. Haveing a processor with 16 threads should allow the script to run smoothly.
 
 ## Running the Application
-[This bash script] (https://github.com/ShalomGottesman/FaultTolerantCluster_Public/blob/main/script) showcases the requirements above. (After cloning the repository in a Unix environment you will need to make it runnable) 
+[This bash script](https://github.com/ShalomGottesman/FaultTolerantCluster_Public/blob/main/script) showcases the requirements above. (After cloning the repository in a Unix environment you will need to make it runnable) 
 The script has ten steps, explained below. Each step will have print what step the script is up to.
 
 The script takes the following steps:
