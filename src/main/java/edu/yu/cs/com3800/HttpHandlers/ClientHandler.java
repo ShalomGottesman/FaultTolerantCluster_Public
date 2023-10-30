@@ -144,11 +144,11 @@ public class ClientHandler implements HttpHandler, LoggingServer{
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
-					logger.info("Gateway to server socket could not be created. This is the "+ this.retryCount +" retry for id "+requestID+". Try again with already read code");
+					logger.info("Gateway to server socket could not be created. This is the "+ this.retryCount +" retry for request id "+requestID+". Try again with already read code");
 					this.tpe.execute(new RunnableExchange(this.tpe, this.gateway, this.exchange, this.requestID, this.logger, this.retryCount + 1, data));
 					return;
 				} else {
-					logger.severe("Gateway to server socket could not be created. This is the "+ this.retryCount +" retry for id "+requestID+". Presume this is a persistant error");
+					logger.severe("Gateway to server socket could not be created. This is the "+ this.retryCount +" retry for request id "+requestID+". Presume this is a persistant error");
 				}
 			}
 			try {
