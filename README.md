@@ -23,7 +23,11 @@ The cluster provides an service to compile and run Java files. A user can use a 
 ## System Requirements
 + The provided script (see below) runs the application with multiple nodes running concurrently on the same machine. Each node starts up mulitple threads and does a lot of inter and intra node talking. An underpowered machine will have a very hard time running this script. Haveing a processor with 16 threads should allow the script to run smoothly.
 
-This script showcases the requirements above. The script takes the following steps:
+## Running the Application
+This bash script showcases the requirements above. (After cloning the repository in a Unix environment you will need to make it runnable) 
+The script has ten steps, explained below. Each step will have print what step the script is up to.
+
+The script takes the following steps:
 1. Compile the program
 2. Initialize the Cluster with 7 nodes and a Gateway node
 3. Wait for Leader to be elected. Capture locations of Log files relating to Gossip Heartbeat for each Node. Print each node's status in the cluster
