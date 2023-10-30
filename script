@@ -14,6 +14,7 @@ mvn compile
 echo moving to compiled directory
 cd target/classes
 ###END STEP 1###
+sleep 5
 
 
 ###STEP 2###
@@ -59,6 +60,7 @@ java edu.yu.cs.com3800.stage5.GatewayServer 0 8 [1:localhost:8610,2:localhost:86
 PID8=$!
 echo "server 8 PID -> $PID8"
 ###END STEP 2###
+sleep 5
 
 echo printing ps aux
 ps aux
@@ -135,6 +137,7 @@ echo "Background process 8 PID -> $GBP8"
 echo get cluster status. Depending on how slow the computer is, this may take a while
 curl -s localhost:8683/clusterstatus
 ###END STEP 3###
+sleep 5
 
 ###STEP 4###
 echo step 4
@@ -191,6 +194,7 @@ echo "response 8 -> $resp8"
 echo "request 9 -> $req9"
 echo "response 9 -> $resp9"
 ###END STEP 4###
+sleep 5
 
 #Check that all Gossip file location requests have returned the absolute path
 #Requesting that data from a server is no longer possible once the server is dead
@@ -227,6 +231,7 @@ sleep 90
 echo get cluster status again
 curl -s localhost:8683/clusterstatus
 ###END STEP 5###
+sleep 5
 
 ###STEP 6###
 echo step 6
@@ -301,6 +306,7 @@ echo sending client request 9
 BP9=$!
 echo "Background process 9 PID -> $BP9"
 ###END STEP 6###
+sleep 5
 
 ###STEP 7###
 echo step 7
@@ -347,6 +353,7 @@ echo "response 8 -> $r8"
 echo "request 9 -> 'public class HelloWorld { public String run() { return "18"; } }'"
 echo "response 9 -> $r9"
 ###END STEP 7###
+sleep 5
 
 ###STEP 8###
 echo step 8
@@ -355,6 +362,7 @@ echo "curl -X POST -H "Content-Type: text/x-java-source" -d 'public class HelloW
 curl -X POST -H "Content-Type: text/x-java-source" -d 'public class HelloWorld { public String run() { return "19"; } }' -s localhost:8683/compileandrun
 printf "\n"
 ###END STEP 8###
+sleep 5
 
 ###STEP 9###
 echo step 9
@@ -369,6 +377,7 @@ echo gossip log for server 7: $gossip7
 echo gossip log for server 8: $gossip8
 echo Note that becuase of how the LoggingServer is set up, usually log files for a single run will always end up in the same folder. Except becuase this script is using completely seperate processies, they may end up in different folders
 ###END STEP 9###
+sleep 5
 
 ###STEP 10###
 echo step 10
