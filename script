@@ -220,8 +220,8 @@ echo killing server 1 on udp port 8610
 kill -9 $PID1
 
 #wait time for discovery of dead node
-echo wait 30 seconds for fail to be discovered.
-sleep 30
+echo wait 90 seconds for fail to be discovered.
+sleep 90
 
 #Request cluster status from gateway
 echo get cluster status again
